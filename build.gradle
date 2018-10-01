@@ -1,0 +1,32 @@
+plugins {
+  id "org.jenkins-ci.jpi" version "0.27.0"
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+group = "org.jenkins-ci.plugins"
+version = "0.0.1"    // Or whatever your version is.
+description = "slack notify"
+
+jenkinsPlugin {
+    coreVersion = "1.609.2"                                                         // Version of Jenkins core this plugin depends on.
+    displayName = "Slack Notify plugin"                                       // Human-readable name of plugin.
+    url = "https://wiki.jenkins-ci.org/display/JENKINS/Slack+Notify+Plugin"   // URL for plugin on Jenkins wiki or elsewhere.
+    gitHubUrl = "https://github.com/taka7646/slack-notify-plugin"             // Plugin URL on GitHub. Optional.
+    shortName = "slack-notify"                                                // Plugin ID, defaults to the project name without trailing '-plugin'
+
+    // The developers section is optional, and corresponds to the POM developers section.
+    developers {
+        developer {
+            id 'taka7646'
+            name 'taka7646'
+            email 'taka7646@gmail.com'
+        }
+    }
+}
+
+
+dependencies {
+	compile 'org.apache.httpcomponents:httpclient:4.5.3'
+}

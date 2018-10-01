@@ -1,0 +1,13 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <f:section title="Slack Notification">
+    <f:entry name="token" title="Token" field="token" description="Slack API Token">
+      <f:password />
+    </f:entry>
+    <f:entry name="url" title="url" field="url" description="Slack API url">
+      <f:textbox />
+    </f:entry>
+    <f:entry name="room" title="room" field="room" description="Slack Channel or User">
+      <f:textbox />
+    </f:entry>
+  </f:section>
+</j:jelly>

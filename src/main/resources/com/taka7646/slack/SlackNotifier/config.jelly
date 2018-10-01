@@ -1,0 +1,34 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+  <f:entry name="notificationStrategy" title="notificationStrategy" field="notificationStrategy">
+    <select name="notificationStrategy">
+      <j:forEach var="i" items="${descriptor.STRATEGIES}">
+        <f:option value="${i.getValue()}" selected="${instance.notificationStrategy==i.getValue()}">${i.getValue()}</f:option>
+      </j:forEach>
+    </select>
+  </f:entry>
+
+  <f:entry name="propFileName" title="プロパティファイル" field="propFileName">
+    <f:textbox placeholder="環境変数に追加するプロパティファイルを指定してください" />
+  </f:entry>
+
+  <f:entry name="room" title="チャンネル" field="room">
+    <f:textbox/>
+  </f:entry>
+
+  <f:entry name="successMessage" title="成功時のメッセージ" field="successMessage">
+    <f:textarea/>
+  </f:entry>
+
+  <f:entry name="failureMessage" title="失敗時のメッセージ" field="failureMessage">
+    <f:textarea/>
+  </f:entry>
+
+	<f:validateButton
+	        title="${%Test Connection}" progress="${%Testing...}"
+	        method="testConnection" with="room"/>
+  <f:block>
+  チャンネルには「#&lt;チャンネル名&gt;」「@&lt;ユーザー名&gt;」の指定ができます。<br/>
+  チャンネル、メッセージには環境変数を使用できます。
+  </f:block>
+</j:jelly>
