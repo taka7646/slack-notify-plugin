@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -21,13 +23,17 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import hudson.Util;
 import hudson.EnvVars;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.ProxyConfiguration;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Computer;
+import hudson.model.Node;
 import hudson.model.Result;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
@@ -43,7 +49,7 @@ public class SlackNotifier extends Notifier {
 
 	private final String notificationStrategy;
 
-	private final String propFileName;
+	private final String additionalMessageFileName;
 
 	private final String room;
 
@@ -57,8 +63,8 @@ public class SlackNotifier extends Notifier {
 		return notificationStrategy;
 	}
 
-	public String getPropFileName() {
-		return propFileName;
+	public String getAdditionalMessageFileName() {
+		return additionalMessageFileName;
 	}
 
 	public String getRoom() {
@@ -74,9 +80,9 @@ public class SlackNotifier extends Notifier {
 	}
 
 	@DataBoundConstructor
-	public SlackNotifier(String notificationStrategy, String propFileName, String room, String successMessage, String failureMessage) {
+	public SlackNotifier(String notificationStrategy, String additionalMessageFileName, String room, String successMessage, String failureMessage) {
 		this.notificationStrategy = notificationStrategy;
-		this.propFileName = propFileName;
+		this.additionalMessageFileName = additionalMessageFileName;
 		this.room = room;
 		this.successMessage = successMessage;
 		this.failureMessage = failureMessage;
@@ -104,23 +110,24 @@ public class SlackNotifier extends Notifier {
 		} catch (Exception e) {
 			env = new EnvVars();
 		}
-		if (StringUtils.isNotEmpty(this.propFileName)) {
-			loadAndExportVariables(build, env, this.propFileName);
-		}
+		
 		String room = StringUtils.isEmpty(this.room) ? desc.getRoom() : this.room;
 		room = env.expand(room);
 
 		SlackSender sender = new SlackSender(desc.getUrl(), desc.getToken(), room);
 		String message = env.expand(result == Result.SUCCESS ? successMessage : failureMessage);
 		String color = result == Result.SUCCESS ? "good" : "danger";
-		listener.getLogger().println(message);
-		message = String.format("%s - %s %s after %s (<%s|Open>)\n%s", 
+		message = String.format("%s - %s %s after %s (<%s|Log>)\n%s", 
 				build.getProject().getFullDisplayName(), 
 				build.getDisplayName(), 
 				result == Result.SUCCESS ? "Success": "Failure",
 				build.getDurationString(), 
-				env.expand("${BUILD_URL}"), 
+				env.get("BUILD_URL") + "console", 
 				message);
+		if (StringUtils.isNotEmpty(this.additionalMessageFileName)) {
+			File f = new File(this.additionalMessageFileName);
+			message += "\n" + loadTextFile(f.getPath());
+		}
 		try {
 			sender.send(message, color);
 		} catch (Exception e) {
@@ -136,48 +143,23 @@ public class SlackNotifier extends Notifier {
 	}
 	
 	/**
-	 * プロパティファイルをロードして環境変数に登録する
-	 * @param build
-	 * @param env
-	 * @param propName
+	 * テキストファイルをロードして環境変数に登録する
+	 * @param fileName
 	 * @throws IOException
+	 * @throws InterruptedException 
 	 */
-	private void loadAndExportVariables(AbstractBuild<?, ?> build, EnvVars env, String propName) throws IOException {
-		Properties prop = new Properties();
-		File file = new File(build.getProject().getRootDir(), propName);
-		try(Reader r = new FileReader(file)) {
-			prop.load(r);
-			for(Object key: prop.keySet()) {
-				String value = (String)prop.get(key);
-				EnvVars.masterEnvVars.put((String)key, value);
-				env.put((String)key, value);
-			}
-		}
-	}
-
-	protected static CloseableHttpClient getHttpClient() {
-		final HttpClientBuilder clientBuilder = HttpClients.custom();
-		final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-		clientBuilder.setDefaultCredentialsProvider(credentialsProvider);
-
-		if (Jenkins.getInstance() != null) {
-			ProxyConfiguration proxy = Jenkins.getInstance().proxy;
-			if (proxy != null) {
-				final HttpHost proxyHost = new HttpHost(proxy.name, proxy.port);
-				final HttpRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxyHost);
-				clientBuilder.setRoutePlanner(routePlanner);
-
-				String username = proxy.getUserName();
-				String password = proxy.getPassword();
-				// Consider it to be passed if username specified. Sufficient?
-				if (username != null && !"".equals(username.trim())) {
-					logger.info("Using proxy authentication (user=" + username + ")");
-					credentialsProvider.setCredentials(new AuthScope(proxyHost),
-							new UsernamePasswordCredentials(username, password));
-				}
-			}
-		}
-		return clientBuilder.build();
+	private String loadTextFile(String fileName) throws IOException, InterruptedException {
+        Computer computer = Computer.currentComputer();
+        Node node = computer.getNode();
+        if (node == null) {
+        	return "";
+        }
+        FilePath rootPath = node.getRootPath();
+        if (rootPath == null) {
+        	return "";
+        }
+    	List<String> items = rootPath.act(new TextFileLoader(fileName));
+    	return String.join("\n", items);
 	}
 
 	@Extension

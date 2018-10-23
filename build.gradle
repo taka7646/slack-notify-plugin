@@ -6,7 +6,7 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 
 group = "org.jenkins-ci.plugins"
-version = "0.0.1"    // Or whatever your version is.
+version = "0.0.4"    // Or whatever your version is.
 description = "slack notify"
 
 jenkinsPlugin {

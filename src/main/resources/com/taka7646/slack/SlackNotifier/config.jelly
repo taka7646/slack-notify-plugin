@@ -8,8 +8,8 @@
     </select>
   </f:entry>
 
-  <f:entry name="propFileName" title="プロパティファイル" field="propFileName">
-    <f:textbox placeholder="環境変数に追加するプロパティファイルを指定してください" />
+  <f:entry name="additionalMessageFileName" title="追加メッセージファイル" field="additionalMessageFileName">
+    <f:textbox placeholder="追加メッセージのファイルを指定してください" />
   </f:entry>
 
   <f:entry name="room" title="チャンネル" field="room">
@@ -29,6 +29,8 @@
 	        method="testConnection" with="room"/>
   <f:block>
   チャンネルには「#&lt;チャンネル名&gt;」「@&lt;ユーザー名&gt;」の指定ができます。<br/>
-  チャンネル、メッセージには環境変数を使用できます。
+  チャンネル、メッセージには環境変数を使用できます。<br/>
+  追加メッセージファイルはワークスペースからの相対パスか絶対パスで指定してください。<br/>
+  メッセージの最後に追加メッセージファイルの内容が追加されます
   </f:block>
 </j:jelly>
