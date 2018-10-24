@@ -117,8 +117,9 @@ public class SlackNotifier extends Notifier {
 		SlackSender sender = new SlackSender(desc.getUrl(), desc.getToken(), room);
 		String message = env.expand(result == Result.SUCCESS ? successMessage : failureMessage);
 		String color = result == Result.SUCCESS ? "good" : "danger";
-		message = String.format("%s - %s %s after %s (<%s|Log>)\n%s", 
+		message = String.format("%s - <%s|%s> %s after %s (<%s|Log>)\n%s", 
 				build.getProject().getFullDisplayName(), 
+				env.get("BUILD_URL"),
 				build.getDisplayName(), 
 				result == Result.SUCCESS ? "Success": "Failure",
 				build.getDurationString(), 
@@ -170,8 +171,6 @@ public class SlackNotifier extends Notifier {
 		private String room;
 
 		public static final NotificationStrategy[] STRATEGIES = NotificationStrategy.values();
-		public static final MessageFormat[] FORMATS = MessageFormat.values();
-		public static final SendTarget[] SEND_TARGETS = SendTarget.values();
 
 		public String getToken() {
 			return token;
