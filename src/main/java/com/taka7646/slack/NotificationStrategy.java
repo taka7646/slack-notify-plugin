@@ -38,6 +38,8 @@ public enum NotificationStrategy {
 			Result previousResult = build.getPreviousBuild().getResult();
 			if(result == Result.SUCCESS){
 				return previousResult != Result.SUCCESS;
+			}else if(result == Result.ABORTED){
+				return false;
 			}else{
 				return true;
 			}
